@@ -16,49 +16,48 @@ import java.util.Random;
 public class ServidorRamon {
 
     public void iniciaConexion() throws IOException {
-        
+        String fraseCliente;
         ServerSocket socketServidor = new ServerSocket(7777);
         Socket conexion;
-        
-        boolean centinela = true;
-                
+
         do {
+
+            System.out.println("Esperando cliente...");
             conexion = socketServidor.accept();
+            System.out.println("Aceptado transporte desde " + conexion.getInetAddress() + ":"
+                    + conexion.getPort());
+            BufferedReader desdeCliente
+                    = new BufferedReader(new InputStreamReader(conexion.getInputStream()));
             
-            System.out.println("Esperando cliente");
-            System.out.println("Aceptado transporte desde " + conexion.getInetAddress() + ":" + conexion.getPort());
-            
-            BufferedReader desdeCliente = 
-                    new BufferedReader(new InputStreamReader(conexion.getInputStream()));
-            PrintWriter haciaCliente = new PrintWriter(conexion.getOutputStream());
-            
+            PrintWriter haciaCliente = new PrintWriter(conexion.getOutputStream(), true);
+
+            String[] frases = {
+                "A quien madruga dios le ayuda",
+                "No por mucho madrugar amanece mas temprano",
+                "A buen entendedor, pocas palabras bastan",
+                "A caballo regalado, no le mires el diente",
+                "A cada cerdo le llega su San Martín"
+            };
+
             do {
-                String[] frases = {
-                    "A quien madruga dios le ayuda", 
-                    "No por mucho madrugar amanece mas temprano", 
-                    "A buen entendedor, pocas palabras bastan",
-                    "A caballo regalado, no le mires el diente",
-                    "A cada cerdo le llega su San Martín"
-                };
-                
-                if(desdeCliente.readLine().equals("FORTUNE")) {
+                fraseCliente = desdeCliente.readLine();
+
+                if (fraseCliente.equals("FORTUNE")) {
                     Random frase = new Random();
                     int posicion = frase.nextInt(5);
                     haciaCliente.println(frases[posicion]);
-                    
-                } else if(desdeCliente.readLine().equals("RANDOM")) {
+
+                } else if (fraseCliente.equals("RANDOM")) {
                     Random r = new Random();
                     int numeroRandom = r.nextInt(1000);
                     haciaCliente.println(numeroRandom);
-                } else if(desdeCliente.readLine().equals("BYE")) {
-                    conexion.close();
-                } else {
-                    haciaCliente.println("ERROR");
-                }
-            } while(!(desdeCliente.readLine().equals("BYE")));
-            
-            
-        } while(!centinela);
+                } 
+                
+            } while (!(fraseCliente.equals("BYE") || fraseCliente.equals("SHUTDOWN") ));
+            System.out.println("Conexion con el cliente cortada");
+            conexion.close();
+        } while (!(fraseCliente.equals("SHUTDOWN")));
+        System.out.println("Iniciando apagado del servidor");
     }
     
     public void run() throws IOException {
